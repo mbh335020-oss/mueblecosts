@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema MuebleCost</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #eef2f5;
+            padding-bottom: 15px;
+        }
+        .header h1 {
+            color: #2c3e50;
+            margin: 0 0 5px 0;
+        }
+        .header p {
+            color: #7f8c8d;
+            margin: 0;
+            font-size: 14px;
+        }
+        .nav-tabs {
+            display: flex;
+            border-bottom: 2px solid #dee2e6;
+            margin-bottom: 20px;
+            gap: 5px;
+        }
+        .tab-btn {
+            padding: 10px 20px;
+            border: none;
+            background: #e9ecef;
+            cursor: pointer;
+            font-weight: 600;
+            border-radius: 5px 5px 0 0;
+            color: #495057;
+            transition: all 0.2s;
+        }
+        .tab-btn.active {
+            background: #2c3e50;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+        }
+        @media(max-width: 768px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+        .panel {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            padding: 20px;
+            border-radius: 6px;
+        }
+        .panel h3 {
+            margin-top: 0;
+            color: #2c3e50;
+            border-bottom: 1px solid #edf2f7;
+            padding-bottom: 10px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .form-control {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        .btn {
+            background: #2c3e50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            width: 100%;
+            font-size: 14px;
+        }
+        .btn:hover { background: #1a252f; }
+        .btn-danger { background: #e74c3c; }
+        .btn-danger:hover { background: #c0392b; }
+        .btn-secondary { background: #95a5a6; }
+        .btn-secondary:hover { background: #7f8c8d; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        th, td {
+            border: 1px solid #e2e8f0;
+            padding: 10px;
+            text-align: left;
+        }
+        th { background-color: #f8fafc; color: #475569; }
+        tr:hover { background-color: #f1f5f9; cursor: pointer; }
+        .total-box {
+            background: #e2e8f0;
+            padding: 15px;
+            border-radius: 4px;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: right;
+            margin-top: 15px;
+        }
+        .actions-cell {
+            display: flex;
+            gap: 5px;
+        }
+        .sm-btn {
+            padding: 4px 8px;
+            font-size: 12px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>🛋️ Sistema MuebleCost</h1>
+        <p>Gestión permanente de materiales, cotizaciones y costos de fabricación</p>
+    </div>
+
+    <!-- Navegación por pestañas -->
+    <div class="nav-tabs">
+        <button class="tab-btn active" onclick="switchTab('materiales-tab')">📦 Insumos y Materiales</button>
+        <button class="tab-btn" onclick="switchTab('crear-tab')">🔨 Calcular y Crear Mueble</button>
+        <button class="tab-btn" onclick="switchTab('historial-tab')">📜 Historial de Muebles</button>
+    </div>
+
+    <!-- PESTAÑA 1: MATERIALES -->
+    <div id="materiales-tab" class="tab-content active">
+        <div class="grid">
+            <div class="panel">
+                <h3 id="form-material-title">Registrar Material</h3>
+                <form id="material-form" onsubmit="saveMaterial(event)">
+                    <input type="hidden" id="material-id">
+                    <div class="form-group">
+                        <label for="mat-nombre">Nombre del Material:</label>
+                        <input type="text" id="mat-nombre" class="form-control" placeholder="Ej: Tela Chenille, Madera Pino" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="mat-categoria">Categoría:</label>
+                        <select id="mat-categoria" class="form-control">
+                            <option value="Maderas">Maderas</option>
+                            <option value="Telas/Tapicería">Telas/Tapicería</option>
+                            <option value="Espumas">Espumas</option>
+                            <option value="Herrajes/Tornillos">Herrajes/Tornillos</option>
+                            <option value="Acabados/Pinturas">Acabados/Pinturas</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="mat-unidad">Unidad de Medida:</label>
+                        <input type="text" id="mat-unidad" class="form-control" placeholder="Ej: Metros, Pies, Unidades" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="mat-precio">Precio Unitario (S/):</label>
+                        <input type="number" id="mat-precio" class="form-control" step="0.01" min="0" placeholder="0.00" required>
+                    </div>
+                    <button type="submit" class="btn" id="btn-save-mat">Guardar Material</button>
+                    <button type="button" class="btn btn-secondary" id="btn-cancel-mat" style="display:none; margin-top:5px;" onclick="resetMaterialForm()">Cancelar Edición</button>
+                </form>
+            </div>
+            <div class="panel">
+                <h3>Lista de Materiales Registrados</h3>
+                <p style="font-size:12px; color:#7f8c8d; margin-top:-10px;">Haz clic en Editar o Eliminar en la tabla para gestionar tus insumos.</p>
+                <div style="overflow-x:auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Categoría</th>
+                                <th>Unidad</th>
+                                <th>Precio actual</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="materials-table-body">
+                            <!-- Dinámico -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PESTAÑA 2: CREAR MUEBLE -->
+    <div id="crear-tab" class="tab-content">
+        <div class="grid">
+            <div class="panel">
+                <h3>Añadir Insumo al Mueble</h3>
+                <div class="form-group">
+                    <label for="mueble-nombre">Nombre del Mueble:</label>
+                    <input type="text" id="mueble-nombre" class="form-control" placeholder="Ej: Sofá Chesterfield 3 cuerpos">
+                </div>
+                <hr style="border:0; border-top:1px solid #edf2f7; margin:20px 0;">
+                <div class="form-group">
+                    <label for="select-material">Seleccionar Material:</label>
+                    <select id="select-material" class="form-control">
+                        <!-- Dinámico -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="select-cantidad">Cantidad Necesaria:</label>
+                    <input type="number" id="select-cantidad" class="form-control" step="0.01" min="0.01" placeholder="0.00">
+                </div>
+                <button type="button" class="btn" onclick="addMaterialToMueble()">Añadir Material</button>
+            </div>
+            <div class="panel">
+                <h3>Estructura y Costos del Mueble</h3>
+                <div style="overflow-x:auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Material</th>
+                                <th>Precio Unit.</th>
+                                <th>Cantidad</th>
+                                <th>Subtotal</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mueble-details-body">
+                            <!-- Dinámico -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="total-box">
+                    Costo Total Fabricación: S/ <span id="mueble-total-cost">0.00</span>
+                </div>
+                <button type="button" class="btn" style="background:#27ae60; margin-top:15px;" onclick="saveMuebleCompleto()">Guardar Mueble en Historial</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PESTAÑA 3: HISTORIAL -->
+    <div id="historial-tab" class="tab-content">
+        <div class="panel">
+            <h3>Historial de Muebles Fabricados</h3>
+            <p style="font-size:12px; color:#7f8c8d; margin-top:-10px;">Los precios mostrados aquí corresponden al costo histórico congelado al momento del registro.</p>
+            <div style="overflow-x:auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Nombre del Mueble</th>
+                            <th>Materiales e Insumos Usados</th>
+                            <th>Costo Total</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historial-table-body">
+                        <!-- Dinámico -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Inicialización de bases de datos locales en localStorage
+    let materiales = JSON.parse(localStorage.getItem('materiales')) || [];
+    let muebles = JSON.parse(localStorage.getItem('muebles')) || [];
+    let currentMuebleItems = [];
+
+    // Sistema de cambio de pestañas robusto sin errores de scripts externos
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        
+        document.getElementById(tabId).classList.add('active');
+        
+        // Activar el botón correspondiente
+        const btnIndex = tabId === 'materiales-tab' ? 0 : tabId === 'crear-tab' ? 1 : 2;
+        document.querySelectorAll('.tab-btn')[btnIndex].add('active');
+        
+        // Recargar vistas dinámicas
+        if(tabId === 'crear-tab') {
+            populateMaterialSelect();
+        } else if(tabId === 'historial-tab') {
+            renderHistorial();
+        }
+    }
+    
+    // Arreglar asignación de clases de botones en switchTab
+    function switchTab(tabId) {
+        const tabs = document.querySelectorAll('.tab-content');
+        const buttons = document.querySelectorAll('.tab-btn');
+        
+        tabs.forEach(tab => {
+            if(tab.id === tabId) {
+                tab.classList.add('active');
+            } else {
+                tab.classList.remove('active');
+            }
+        });
+        
+        buttons.forEach(btn => {
+            if((tabId === 'materiales-tab' && btn.innerText.includes('Insumos')) ||
+               (tabId === 'crear-tab' && btn.innerText.includes('Calcular')) ||
+               (tabId === 'historial-tab' && btn.innerText.includes('Historial'))) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+        
+        if(tabId === 'crear-tab') populateMaterialSelect();
+        if(tabId === 'historial-tab') renderHistorial();
+    }
+
+    // --- LÓGICA DE MATERIALES ---
+    function renderMateriales() {
+        const tbody = document.getElementById('materials-table-body');
+        tbody.innerHTML = '';
+        materiales.forEach((mat, index) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>${mat.nombre}</strong></td>
+                <td>${mat.categoria}</td>
+                <td>${mat.unidad}</td>
+                <td>S/ ${parseFloat(mat.precio).toFixed(2)}</td>
+                <td class="actions-cell">
+                    <button class="sm-btn" style="background:#2980b9;" onclick="editMaterial(${index}, event)">Editar</button>
+                    <button class="sm-btn" style="background:#e74c3c;" onclick="deleteMaterial(${index}, event)">Eliminar</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function saveMaterial(e) {
+        e.preventDefault();
+        const id = document.getElementById('material-id').value;
+        const nombre = document.getElementById('mat-nombre').value.trim();
+        const categoria = document.getElementById('mat-categoria').value;
+        const unidad = document.getElementById('mat-unidad').value.trim();
+        const precio = parseFloat(document.getElementById('mat-precio').value);
+
+        if(!nombre || !unidad || isNaN(precio)) return;
+
+        if (id === '') {
+            // Crear nuevo
+            materiales.push({ nombre, categoria, unidad, precio });
+        } else {
+            // Editar existente
+            materiales[parseInt(id)] = { nombre, categoria, unidad, precio };
+        }
+
+        localStorage.setItem('materiales', JSON.stringify(materiales));
+        resetMaterialForm();
+        renderMateriales();
+        alert('Material guardado exitosamente.');
+    }
+
+    function editMaterial(index, event) {
+        event.stopPropagation();
+        const mat = materiales[index];
+        document.getElementById('material-id').value = index;
+        document.getElementById('mat-nombre').value = mat.nombre;
+        document.getElementById('mat-categoria').value = mat.categoria;
+        document.getElementById('mat-unidad').value = mat.unidad;
+        document.getElementById('mat-precio').value = mat.precio;
+        
+        document.getElementById('form-material-title').innerText = "Modificar Material";
+        document.getElementById('btn-save-mat').innerText = "Actualizar Cambios";
+        document.getElementById('btn-cancel-mat').style.display = "block";
+    }
+
+    function deleteMaterial(index, event) {
+        event.stopPropagation();
+        if(confirm('¿Está seguro de que desea eliminar este material permanentemente?')) {
+            materiales.splice(index, 1);
+            localStorage.setItem('materiales', JSON.stringify(materiales));
+            renderMateriales();
+        }
+    }
+
+    function resetMaterialForm() {
+        document.getElementById('material-id').value = '';
+        document.getElementById('material-form').reset();
+        document.getElementById('form-material-title').innerText = "Registrar Material";
+        document.getElementById('btn-save-mat').innerText = "Guardar Material";
+        document.getElementById('btn-cancel-mat').style.display = "none";
+    }
+
+    // --- LÓGICA DE COTIZACIÓN / CREACIÓN ---
+    function populateMaterialSelect() {
+        const select = document.getElementById('select-material');
+        select.innerHTML = '';
+        if(materiales.length === 0) {
+            select.innerHTML = '<option value="">-- No hay materiales registrados --</option>';
+            return;
+        }
+        materiales.forEach((mat, index) => {
+            const opt = document.createElement('option');
+            opt.value = index;
+            opt.innerText = `${mat.nombre} (${mat.unidad}) - S/ ${mat.precio.toFixed(2)}`;
+            select.appendChild(opt);
+        });
+    }
+
+    function addMaterialToMueble() {
+        const matIndex = document.getElementById('select-material').value;
+        const cantidad = parseFloat(document.getElementById('select-cantidad').value);
+
+        if(matIndex === "" || isNaN(cantidad) || cantidad <= 0) {
+            alert('Por favor seleccione un material válido e ingrese una cantidad correcta.');
+            return;
+        }
+
+        const mat = materiales[parseInt(matIndex)];
+        
+        // Validar si ya está añadido para sumar cantidad
+        const exist = currentMuebleItems.find(item => item.nombre === mat.nombre);
+        if(exist) {
+            exist.cantidad += cantidad;
+            exist.subtotal = exist.cantidad * exist.precio;
+        } else {
+            currentMuebleItems.push({
+                nombre: mat.nombre,
+                precio: mat.precio,
+                cantidad: cantidad,
+                unidad: mat.unidad,
+                subtotal: cantidad * mat.precio
+            });
+        }
+        
+        document.getElementById('select-cantidad').value = '';
+        renderMuebleDetails();
+    }
+
+    function renderMuebleDetails() {
+        const tbody = document.getElementById('mueble-details-body');
+        tbody.innerHTML = '';
+        let total = 0;
+
+        currentMuebleItems.forEach((item, index) => {
+            total += item.subtotal;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${item.nombre}</td>
+                <td>S/ ${item.precio.toFixed(2)}</td>
+                <td>${item.cantidad.toFixed(2)} ${item.unidad}</td>
+                <td><strong>S/ ${item.subtotal.toFixed(2)}</strong></td>
+                <td><button class="sm-btn" style="background:#e74c3c;" onclick="removeMaterialFromMueble(${index})">Quitar</button></td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        document.getElementById('mueble-total-cost').innerText = total.toFixed(2);
+    }
+
+    function removeMaterialFromMueble(index) {
+        currentMuebleItems.splice(index, 1);
+        renderMuebleDetails();
+    }
+
+    function saveMuebleCompleto() {
+        const nombreMueble = document.getElementById('mueble-nombre').value.trim();
+        if(!nombreMueble) {
+            alert('Por favor asigne un nombre al mueble antes de guardarlo.');
+            return;
+        }
+        if(currentMuebleItems.length === 0) {
+            alert('Debe añadir al menos un material a la estructura del mueble.');
+            return;
+        }
+
+        const totalCost = currentMuebleItems.reduce((acc, i) => acc + i.subtotal, 0);
+        const fecha = new Date().toLocaleString();
+
+        // Guardar con precios congelados (históricos)
+        muebles.push({
+            nombre: nombreMueble,
+            fecha: fecha,
+            materialesUsados: [...currentMuebleItems],
+            total: totalCost
+        });
+
+        localStorage.setItem('muebles', JSON.stringify(muebles));
+        
+        // Resetear interfaz de creación
+        document.getElementById('mueble-nombre').value = '';
+        currentMuebleItems = [];
+        renderMuebleDetails();
+        
+        alert('¡Mueble guardado de forma permanente en el Historial!');
+        switchTab('historial-tab');
+    }
+
+    // --- LÓGICA DEL HISTORIAL ---
+    function renderHistorial() {
+        const tbody = document.getElementById('historial-table-body');
+        tbody.innerHTML = '';
+
+        if(muebles.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#7f8c8d;">No hay muebles registrados en el historial todavía.</td></tr>';
+            return;
+        }
+
+        muebles.forEach((mueble, index) => {
+            let matList = mueble.materialesUsados.map(i => `• ${i.nombre}: ${i.cantidad} ${i.unidad} (a S/ ${i.precio.toFixed(2)})`).join('<br>');
+            
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="color:#7f8c8d; font-size:12px;">${mueble.fecha}</td>
+                <td><strong>${mueble.nombre}</strong></td>
+                <td style="font-size:13px; color:#555;">${matList}</td>
+                <td style="color:#27ae60; font-size:16px;"><strong>S/ ${mueble.total.toFixed(2)}</strong></td>
+                <td><button class="sm-btn" style="background:#e74c3c;" onclick="deleteMueble(${index})">Eliminar</button></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function deleteMueble(index) {
+        if(confirm('¿Está seguro de que desea eliminar este mueble del historial permanentemente?')) {
+            muebles.splice(index, 1);
+            localStorage.setItem('muebles', JSON.stringify(muebles));
+            renderHistorial();
+        }
+    }
+
+    // Renderizado inicial al cargar la página
+    document.addEventListener("DOMContentLoaded", function() {
+        renderMateriales();
+    });
+</script>
+
+</body>
+</html>
